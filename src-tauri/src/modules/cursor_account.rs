@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 use crate::models::cursor::{CursorAccount, CursorAccountIndex, CursorImportPayload};
-use crate::modules::{account, logger};
+use crate::modules::{account, cursor_safe_storage, logger};
 
 const ACCOUNTS_INDEX_FILE: &str = "cursor_accounts.json";
 const ACCOUNTS_DIR: &str = "cursor_accounts";
@@ -377,6 +377,17 @@ fn resolve_account_auth_id(account: &CursorAccount) -> Option<String> {
     normalize_auth_identity(account.auth_id.as_deref())
         .or_else(|| extract_auth_id_from_raw_value(account.cursor_auth_raw.as_ref()))
         .or_else(|| extract_auth_id_from_access_token(account.access_token.as_str()))
+}
+
+fn prepare_imported_account(account: &mut CursorAccount) -> Result<(), String> {
+    decrypt_account_tokens_if_needed(account)?;
+    if account.auth_id.is_none() {
+        if let Some(auth_id) = resolve_account_auth_id(account) {
+            account.auth_id = Some(auth_id.clone());
+            upsert_cursor_auth_raw_string(account, "authId", Some(auth_id));
+        }
+    }
+    Ok(())
 }
 
 fn cursor_auth_raw_object_mut(account: &mut CursorAccount) -> &mut serde_json::Map<String, Value> {
@@ -820,7 +831,98 @@ fn apply_payload(
     account.last_used = now_ts();
 }
 
+fn decrypt_import_payload_tokens_if_needed(
+    payload: &mut CursorImportPayload,
+) -> Result<(), String> {
+    let refresh_is_sealed = payload
+        .refresh_token
+        .as_deref()
+        .map(cursor_safe_storage::is_sealed)
+        .unwrap_or(false);
+    if !cursor_safe_storage::is_sealed(&payload.access_token) && !refresh_is_sealed {
+        return Ok(());
+    }
+
+    let data_root = get_default_cursor_data_dir()?;
+    let access_token = cursor_safe_storage::decrypt_if_needed(&payload.access_token, &data_root)
+        .map_err(|e| format!("解密 Cursor accessToken 失败: {}", e))?;
+    let refresh_token = payload
+        .refresh_token
+        .as_deref()
+        .map(|token| cursor_safe_storage::decrypt_if_needed(token, &data_root))
+        .transpose()
+        .map_err(|e| format!("解密 Cursor refreshToken 失败: {}", e))?;
+
+    payload.access_token = access_token.clone();
+    payload.refresh_token = refresh_token.clone();
+    if payload.auth_id.is_none() {
+        payload.auth_id = extract_auth_id_from_access_token(&access_token);
+    }
+
+    if let Some(Value::Object(raw)) = payload.cursor_auth_raw.as_mut() {
+        raw.insert("accessToken".to_string(), Value::String(access_token));
+        if let Some(refresh_token) = refresh_token {
+            raw.insert("refreshToken".to_string(), Value::String(refresh_token));
+        }
+    }
+
+    Ok(())
+}
+
+fn decrypt_account_tokens_with_root(
+    account: &mut CursorAccount,
+    data_root: &std::path::Path,
+) -> Result<(), String> {
+    let refresh_is_sealed = account
+        .refresh_token
+        .as_deref()
+        .map(cursor_safe_storage::is_sealed)
+        .unwrap_or(false);
+    if !cursor_safe_storage::is_sealed(&account.access_token) && !refresh_is_sealed {
+        return Ok(());
+    }
+
+    let access_token = cursor_safe_storage::decrypt_if_needed(&account.access_token, data_root)
+        .map_err(|e| format!("解密 Cursor accessToken 失败: {}", e))?;
+    let refresh_token = account
+        .refresh_token
+        .as_deref()
+        .map(|token| cursor_safe_storage::decrypt_if_needed(token, data_root))
+        .transpose()
+        .map_err(|e| format!("解密 Cursor refreshToken 失败: {}", e))?;
+
+    account.access_token = access_token.clone();
+    account.refresh_token = refresh_token.clone();
+    if account.auth_id.is_none() {
+        if let Some(auth_id) = extract_auth_id_from_access_token(&access_token) {
+            account.auth_id = Some(auth_id.clone());
+            upsert_cursor_auth_raw_string(account, "authId", Some(auth_id));
+        }
+    }
+    upsert_cursor_auth_raw_string(account, "accessToken", Some(access_token));
+    upsert_cursor_auth_raw_string(account, "refreshToken", refresh_token);
+    Ok(())
+}
+
+fn decrypt_account_tokens_if_needed(account: &mut CursorAccount) -> Result<(), String> {
+    let has_sealed_token = cursor_safe_storage::is_sealed(&account.access_token)
+        || account
+            .refresh_token
+            .as_deref()
+            .map(cursor_safe_storage::is_sealed)
+            .unwrap_or(false);
+    if !has_sealed_token {
+        return Ok(());
+    }
+
+    let data_root = get_default_cursor_data_dir()?;
+    decrypt_account_tokens_with_root(account, &data_root)
+}
+
 pub fn upsert_account(payload: CursorImportPayload) -> Result<CursorAccount, String> {
+    let mut payload = payload;
+    decrypt_import_payload_tokens_if_needed(&mut payload)?;
+
     let _lock = CURSOR_ACCOUNT_INDEX_LOCK
         .lock()
         .map_err(|_| "获取 Cursor 账号锁失败".to_string())?;
@@ -1096,14 +1198,16 @@ fn payloads_from_import_json_value(value: Value) -> Result<Vec<CursorImportPaylo
 }
 
 pub fn import_from_json(json_content: &str) -> Result<Vec<CursorAccount>, String> {
-    if let Ok(account) = serde_json::from_str::<CursorAccount>(json_content) {
+    if let Ok(mut account) = serde_json::from_str::<CursorAccount>(json_content) {
+        prepare_imported_account(&mut account)?;
         let saved = upsert_account_record(account)?;
         return Ok(vec![saved]);
     }
 
     if let Ok(accounts) = serde_json::from_str::<Vec<CursorAccount>>(json_content) {
         let mut result = Vec::new();
-        for account in accounts {
+        for mut account in accounts {
+            prepare_imported_account(&mut account)?;
             let saved = upsert_account_record(account)?;
             result.push(saved);
         }
@@ -1193,17 +1297,23 @@ pub fn read_local_cursor_auth() -> Result<Option<CursorImportPayload>, String> {
     let conn = Connection::open(&db_path)
         .map_err(|e| format!("打开 Cursor 本地数据库失败({}): {}", db_path.display(), e))?;
 
-    let access_token = match read_vscdb_item(&conn, "cursorAuth/accessToken") {
+    let data_root = get_default_cursor_data_dir()?;
+    let raw_access_token = match read_vscdb_item(&conn, "cursorAuth/accessToken") {
         Some(t) => t,
         None => return Ok(None),
     };
+    let access_token = cursor_safe_storage::decrypt_if_needed(&raw_access_token, &data_root)
+        .map_err(|e| format!("解密 Cursor accessToken 失败: {}", e))?;
 
     let email = read_vscdb_item(&conn, "cursorAuth/cachedEmail").unwrap_or_default();
     if email.is_empty() {
         return Ok(None);
     }
 
-    let refresh_token = read_vscdb_item(&conn, "cursorAuth/refreshToken");
+    let refresh_token = read_vscdb_item(&conn, "cursorAuth/refreshToken")
+        .map(|token| cursor_safe_storage::decrypt_if_needed(&token, &data_root))
+        .transpose()
+        .map_err(|e| format!("解密 Cursor refreshToken 失败: {}", e))?;
     let auth_id = read_vscdb_item(&conn, "cursorAuth/authId")
         .or_else(|| extract_auth_id_from_access_token(access_token.as_str()));
     let membership_type = read_vscdb_item(&conn, "cursorAuth/stripeMembershipType");
@@ -1281,7 +1391,7 @@ fn upsert_vscdb_item(conn: &Connection, key: &str, value: &str) -> Result<(), St
 }
 
 pub fn inject_to_cursor(account_id: &str) -> Result<(), String> {
-    let account =
+    let mut account =
         load_account(account_id).ok_or_else(|| format!("Cursor 账号不存在: {}", account_id))?;
     let db_path = get_default_cursor_state_db_path()?;
     if !db_path.exists() {
@@ -1291,8 +1401,19 @@ pub fn inject_to_cursor(account_id: &str) -> Result<(), String> {
     let conn =
         Connection::open(&db_path).map_err(|e| format!("打开 Cursor 本地数据库失败: {}", e))?;
 
-    upsert_vscdb_item(&conn, "cursorAuth/accessToken", &account.access_token)?;
-    if let Some(ref rt) = account.refresh_token {
+    let data_root = get_default_cursor_data_dir()?;
+    decrypt_account_tokens_with_root(&mut account, &data_root)?;
+    let access_token = cursor_safe_storage::encrypt_if_needed(&account.access_token, &data_root)
+        .map_err(|e| format!("加密 Cursor accessToken 失败: {}", e))?;
+    let refresh_token = account
+        .refresh_token
+        .as_deref()
+        .map(|token| cursor_safe_storage::encrypt_if_needed(token, &data_root))
+        .transpose()
+        .map_err(|e| format!("加密 Cursor refreshToken 失败: {}", e))?;
+
+    upsert_vscdb_item(&conn, "cursorAuth/accessToken", &access_token)?;
+    if let Some(ref rt) = refresh_token {
         upsert_vscdb_item(&conn, "cursorAuth/refreshToken", rt)?;
     }
     upsert_vscdb_item(&conn, "cursorAuth/cachedEmail", &account.email)?;
@@ -1303,7 +1424,7 @@ pub fn inject_to_cursor(account_id: &str) -> Result<(), String> {
         upsert_vscdb_item(&conn, "cursorAuth/stripeSubscriptionStatus", ss)?;
     }
 
-    upsert_vscdb_item(&conn, "cursor.accessToken", &account.access_token)?;
+    upsert_vscdb_item(&conn, "cursor.accessToken", &access_token)?;
     upsert_vscdb_item(&conn, "cursor.email", &account.email)?;
 
     logger::log_info(&format!(
@@ -1314,7 +1435,7 @@ pub fn inject_to_cursor(account_id: &str) -> Result<(), String> {
 }
 
 pub fn inject_to_cursor_at_path(db_path: &std::path::Path, account_id: &str) -> Result<(), String> {
-    let account =
+    let mut account =
         load_account(account_id).ok_or_else(|| format!("Cursor 账号不存在: {}", account_id))?;
     if !db_path.exists() {
         return Err(format!("Cursor state.vscdb 不存在: {}", db_path.display()));
@@ -1323,8 +1444,23 @@ pub fn inject_to_cursor_at_path(db_path: &std::path::Path, account_id: &str) -> 
     let conn =
         Connection::open(db_path).map_err(|e| format!("打开 Cursor 本地数据库失败: {}", e))?;
 
-    upsert_vscdb_item(&conn, "cursorAuth/accessToken", &account.access_token)?;
-    if let Some(ref rt) = account.refresh_token {
+    let data_root = db_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .and_then(std::path::Path::parent)
+        .ok_or_else(|| "无法从 Cursor state.vscdb 推导数据目录".to_string())?;
+    decrypt_account_tokens_with_root(&mut account, data_root)?;
+    let access_token = cursor_safe_storage::encrypt_if_needed(&account.access_token, data_root)
+        .map_err(|e| format!("加密 Cursor accessToken 失败: {}", e))?;
+    let refresh_token = account
+        .refresh_token
+        .as_deref()
+        .map(|token| cursor_safe_storage::encrypt_if_needed(token, data_root))
+        .transpose()
+        .map_err(|e| format!("加密 Cursor refreshToken 失败: {}", e))?;
+
+    upsert_vscdb_item(&conn, "cursorAuth/accessToken", &access_token)?;
+    if let Some(ref rt) = refresh_token {
         upsert_vscdb_item(&conn, "cursorAuth/refreshToken", rt)?;
     }
     upsert_vscdb_item(&conn, "cursorAuth/cachedEmail", &account.email)?;
@@ -1335,7 +1471,7 @@ pub fn inject_to_cursor_at_path(db_path: &std::path::Path, account_id: &str) -> 
         upsert_vscdb_item(&conn, "cursorAuth/stripeSubscriptionStatus", ss)?;
     }
 
-    upsert_vscdb_item(&conn, "cursor.accessToken", &account.access_token)?;
+    upsert_vscdb_item(&conn, "cursor.accessToken", &access_token)?;
     upsert_vscdb_item(&conn, "cursor.email", &account.email)?;
 
     logger::log_info(&format!(
@@ -1430,13 +1566,23 @@ fn build_cursor_http_client() -> Result<reqwest::Client, String> {
 
 fn extract_workos_user_id(jwt: &str) -> Option<String> {
     let value = decode_access_token_payload(jwt)?;
-    let sub = value.get("sub")?.as_str()?;
-    let user_id = sub.rsplit('|').next().unwrap_or(sub);
-    if user_id.starts_with("user_") {
-        Some(user_id.to_string())
-    } else {
-        None
+    for key in [
+        "sub",
+        "user_id",
+        "userId",
+        "workos_user_id",
+        "workosUserId",
+        "id",
+    ] {
+        let Some(raw) = value.get(key).and_then(|item| item.as_str()) else {
+            continue;
+        };
+        let user_id = raw.rsplit('|').next().unwrap_or(raw).trim();
+        if user_id.starts_with("user_") {
+            return Some(user_id.to_string());
+        }
     }
+    None
 }
 
 fn build_session_cookie(access_token: &str) -> Option<String> {
@@ -1707,6 +1853,13 @@ async fn refresh_account_async_once(account_id: &str) -> Result<CursorAccount, S
 
     let client = build_cursor_http_client()?;
     let mut account = existing.clone();
+    decrypt_account_tokens_if_needed(&mut account)?;
+    if account.auth_id.is_none() {
+        if let Some(auth_id) = extract_auth_id_from_access_token(&account.access_token) {
+            account.auth_id = Some(auth_id.clone());
+            upsert_cursor_auth_raw_string(&mut account, "authId", Some(auth_id));
+        }
+    }
 
     if access_token_needs_refresh(&account.access_token) {
         match refresh_account_access_token_with_client(&client, &mut account).await {
