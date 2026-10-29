@@ -158,6 +158,15 @@
     "providerClear": "Azzera selezione"
   },
   "common": {
+    "networkErrors": {
+      "upstream": "questo servizio a monte",
+      "proxyConnection": "Connessione a {{target}} tramite il proxy «{{proxy}}» non riuscita. Potrebbe esserci un problema del proxy o della rete. Controlla il proxy o prova un altro nodo.",
+      "proxyTimeout": "Tempo scaduto per la connessione a {{target}} tramite il proxy «{{proxy}}». Potrebbe esserci un problema del proxy o della rete. Controlla il proxy o prova un altro nodo.",
+      "proxyAuth": "Autenticazione del proxy «{{proxy}}» non riuscita. Controlla il nome utente o la password del proxy.",
+      "localProxyUnavailable": "Impossibile connettersi al proxy locale «{{proxy}}». Verifica che il servizio proxy sia in esecuzione.",
+      "directConnection": "Connessione a {{target}} non riuscita. Controlla la rete e riprova.",
+      "directTimeout": "Tempo scaduto per la connessione a {{target}}. Controlla la rete e riprova."
+    },
     "codexUsage": {
       "title": "Quota e utilizzo",
       "session": "Chat attuale",
@@ -1629,6 +1638,35 @@
       "refreshed": "Utilizzo aggiornato",
       "usage": "Utilizzo",
       "tierOther": "Altro"
+    },
+    "background": {
+      "title": "Sfondo",
+      "description": "Modifica solo lo sfondo dell’app. Le schede degli account e i controlli mantengono il loro aspetto.",
+      "presets": "Sfondi predefiniti",
+      "default": "Predefinito",
+      "mist": "Nebbia",
+      "forest": "Foresta",
+      "dusk": "Tramonto",
+      "sand": "Sabbia",
+      "custom": "Personale",
+      "chooseImage": "Scegli immagine",
+      "replaceImage": "Cambia immagine",
+      "imageHint": "JPG, PNG o WebP, massimo 10 MB. Le immagini grandi vengono ridotte localmente.",
+      "preview": "Anteprima",
+      "strength": "Intensità",
+      "blur": "Sfocatura",
+      "pixels": "{{count}} pixel",
+      "position": "Posizione",
+      "center": "Centro",
+      "top": "Alto",
+      "bottom": "Basso",
+      "localHint": "Le modifiche si applicano subito e si salvano automaticamente su questo dispositivo. Le immagini non vengono caricate. Ripristina rimuove l’immagine salvata.",
+      "restore": "Ripristina",
+      "imageType": "Scegli un’immagine JPG, PNG o WebP.",
+      "imageSize": "Scegli un’immagine inferiore a 10 MB.",
+      "imageRead": "Impossibile leggere l’immagine. Prova un altro file.",
+      "storage": "Impossibile caricare o salvare lo sfondo. Riprova; lo sfondo precedente viene conservato.",
+      "saveFailed": "Lo sfondo è visibile ma non è stato salvato. Riprova; lo sfondo salvato in precedenza viene conservato."
     }
   },
   "appPath": {
@@ -2353,6 +2391,14 @@
       "weekly": "Quota settimanale",
       "windowHint": "Le soglie seguono la durata effettiva: una settimana o più usa la soglia settimanale. Gli account con sola quota settimanale verificano solo quella. Senza durata resta la corrispondenza tra finestra principale e secondaria.",
       "rule": "Residuo breve <= {{shortCycle}}% o settimanale <= {{weekly}}%"
+    },
+    "launchConfirmation": {
+      "title": "Avvio da confermare",
+      "description": "L’avvio è stato richiesto, ma lo stato del client non è confermato. Potrebbe essere già aperto. Evita di avviarlo di nuovo.",
+      "check": "Verifica stato",
+      "notRunning": "L’istanza di destinazione non è stata ancora rilevata. Ricontrolla più tardi o chiudi questa finestra prima di riprovare l’avvio.",
+      "checkFailed": "Impossibile leggere lo stato di esecuzione. Riprova a verificare più tardi.",
+      "maintenanceDeferred": "Il controllo delle sessioni è temporaneamente indisponibile. La cronologia è stata conservata e questo passaggio di manutenzione è stato saltato."
     },
     "launchErrors": {
       "sessionRestoreFailed": "Riparazione delle sessioni non riuscita e ripristino incompleto. Avvio interrotto; controlla registri e backup prima di riprovare.",
@@ -3179,7 +3225,7 @@
       "resetCreditStatusRedeemed": "Usata",
       "resetCreditStatusExpired": "Scaduta",
       "resetCreditStatusUnknown": "Sconosciuta",
-      "resetCreditNextExpiry": "Prossima scadenza: {{time}}",
+      "resetCreditNextExpiry": "Prossima scadenza del ripristino {{time}}",
       "resetCreditDetailsTitle": "Dettagli reimpostazioni",
       "resetCreditNoRecords": "Nessun record di ripristino",
       "resetCreditRecordsLoadFailed": "Impossibile caricare i record di ripristino: {{error}}",
@@ -3195,7 +3241,12 @@
       "codeReview": "Revisione codice",
       "codeReviewShort": "Revisione",
       "monthlyCreditsHint": "Crediti mensili rimanenti",
-      "monthlyCreditsInline": "Crediti: {{value}}"
+      "monthlyCreditsInline": "Crediti: {{value}}",
+      "resetCreditExpiryHours": "{{hours}} h {{minutes}} min",
+      "resetCreditExpiryMinutes": "{{minutes}} min",
+      "resetCreditExpiryExpired": "Scaduto · dettagli",
+      "resetCreditExpiryUrgent": "Scade presto: {{time}} · {{duration}}",
+      "resetCreditExpiryNormal": "Scade {{time}} · {{duration}}"
     },
     "quotaError": {
       "badge": "Errore quota",
@@ -3472,6 +3523,7 @@
         "expand": "Espandi",
         "collapse": "Comprimi",
         "repairVisibility": "Ripara visibilità",
+        "repairIndex": "Ripara indice chat",
         "restoreSessions": "Ripristina sessioni",
         "exportSessions": "Esporta sessioni",
         "importSessions": "Importa sessioni",
@@ -3504,6 +3556,10 @@
         "clear": "Cancella"
       },
       "messages": {
+        "deleteNotConfirmed": "Il client non ha confermato l’eliminazione. La pulizia locale è stata interrotta e i backup sono stati conservati: {{error}}",
+        "historyReadFailed": "Impossibile leggere la cronologia della chat in sicurezza: {{error}}",
+        "restoreIndexRetry": "Il file della chat è stato conservato, ma non è stato possibile aggiornare l’elenco. L’originale rimane nel cestino. Risolvi il problema e riprova: {{error}}",
+        "importIndexRetry": "I file sono stati importati, ma non è stato possibile aggiornare l’elenco delle chat. I file e il pacchetto di importazione sono stati conservati. Risolvi il problema e riprova: {{error}}",
         "pickOne": "Seleziona almeno una sessione",
         "syncNeedTwo": "Sono necessarie almeno due istanze per sincronizzare le sessioni",
         "pickRestoreOne": "Seleziona almeno una sessione da ripristinare",
@@ -3614,7 +3670,18 @@
         "title": "Ripara cronologia",
         "description": "Normalizza i provider negli indici SQLite, nel catalogo delle sessioni e negli spazi di lavoro. I file rollout mantengono tutti i byte originali; vengono corretti solo gli orari. Prima viene creato un backup locale.",
         "stopInstanceHint": "Chiudi completamente l’istanza Codex App/ChatGPT selezionata prima della riparazione completa. Puoi comunque visualizzare prima l’anteprima.",
-        "encryptedContentWarning": "È stata rilevata cronologia cifrata da un altro provider o account. I metadati possono essere migrati, ma continuare o compattare tali sessioni potrebbe non riuscire; torna al provider/account originale o avvia una nuova sessione."
+        "encryptedContentWarning": "È stata rilevata cronologia cifrata da un altro provider o account. I metadati possono essere migrati, ma continuare o compattare tali sessioni potrebbe non riuscire; torna al provider/account originale o avvia una nuova sessione.",
+        "modeHistory": "Modifica/rami",
+        "modeHistoryDesc": "Corregge gli errori di modifica dei messaggi e creazione di diramazioni dovuti a indici non validi.",
+        "historyLiveHint": "Puoi riparare mentre il client è aperto. Poi riavvia il client e riapri le chat.",
+        "historyDescription": "Controlla le chat selezionate e la cronologia di origine, reimpostando solo gli indici di paginazione non validi. Messaggi, account e impostazioni Provider restano invariati. La riparazione funziona con il client aperto; riavvialo poi per ricaricare gli indici.",
+        "historyPreview": "Trovati {{count}} indici di cronologia non validi ricostruibili. I messaggi restano invariati.",
+        "historySuccess": "Reimpostati {{count}} indici di cronologia non validi. Riavvia il client e riapri le chat per ricostruirli. I backup sono stati conservati.",
+        "historyNoChanges": "Nessun indice di cronologia non valido può essere ricostruito in sicurezza.",
+        "historyFailed": "Riparazione degli indici di cronologia non completata: {{error}}",
+        "historyChanged": "I dati della chat sono cambiati durante la riparazione. Questa riparazione non è stata applicata. Riprova tra poco.",
+        "historyScan": "Controllo degli indici di cronologia ({{current}}/{{total}})…",
+        "historyReset": "Backup e reimpostazione degli indici non validi…"
       },
       "importModal": {
         "title": "Importa sessioni",
@@ -4600,6 +4667,11 @@
       },
       "routing": {
         "optionsTitle": "Opzioni routing",
+        "sessionIdentityMapping": "Mappatura ID sessione",
+        "sessionIdentityMappingEnableHint": "Attivando la mappatura, ogni account a monte usa valori indipendenti di Session-Id e Thread-Id quando si cambia account. Ciò rafforza la separazione degli identificatori, ma può ridurre il riutilizzo della cache tra account. Nello stesso account vengono riutilizzate le mappature esistenti.",
+        "sessionIdentityMappingDisableHint": "Disattivandola, vengono mantenuti i valori originali di Session-Id e Thread-Id del client. Account a monte diversi possono condividere gli identificatori, riducendo la separazione ma potenzialmente aumentando il riutilizzo della cache tra account.",
+        "sessionIdentityMappingCacheNote": "La percentuale di riscontri nella cache dipende anche dalle regole del fornitore, dall’ambito degli account e dal contenuto delle richieste. Questa impostazione non ne garantisce un aumento o una diminuzione.",
+        "sessionIdentityMappingSaveNote": "Dopo la conferma, salva le impostazioni per applicare la modifica.",
         "sessionAffinity": "Affinità sessione",
         "sessionAffinityTtl": "Scadenza (secondi)",
         "responsesWebsockets": "Responses tramite WebSocket",
@@ -5862,6 +5934,22 @@
       "label": "Sincronizza quota attiva",
       "description": "Senza servizio API. Gli account locali attivi si aggiornano ogni 5–30 secondi; le modifiche ai file di sessione attivano nuove verifiche. Vengono letti solo i metadati recenti, non le conversazioni. Restano validi esclusioni, filtri del piano e regole dei gruppi. Disattivato per impostazione predefinita.",
       "error": "Impossibile caricare o salvare l’impostazione. Riprova."
+    },
+    "pathRecovery": {
+      "title": "Imposta il percorso di Codex",
+      "description": "Nessun percorso utilizzabile per il client Codex. Seleziona l’app oppure apri Codex manualmente e avvia il rilevamento.",
+      "reload": "Ricarica",
+      "timeout": "Tempo massimo dell’operazione superato. Riprova: l’avvio non continuerà automaticamente.",
+      "noCandidates": "Codex non è stato rilevato. Apri il client manualmente e riprova, oppure seleziona il percorso.",
+      "pathRequired": "Seleziona o inserisci il percorso del client Codex.",
+      "invalidPath": "Questo percorso non corrisponde a un client desktop Codex valido. Seleziona di nuovo l’app.",
+      "candidates": "App rilevate",
+      "autoLaunchHint": "Disattiva questa opzione per cambiare account senza avviare l’app desktop. Potrai comunque avviarla manualmente.",
+      "manualLaunchHint": "Disattivare l’avvio automatico non completa questo avvio manuale. Salvare solo le impostazioni annulla questo tentativo.",
+      "saveAndRetry": "Salva e riprova",
+      "saveWithoutLaunch": "Salva e continua",
+      "saveOnly": "Salva soltanto",
+      "validationBusy": "Il controllo del percorso precedente è ancora in corso. Riprova tra poco."
     }
   },
   "githubCopilot": {

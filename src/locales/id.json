@@ -158,6 +158,15 @@
     "providerClear": "Hapus pilihan"
   },
   "common": {
+    "networkErrors": {
+      "upstream": "layanan hulu",
+      "proxyConnection": "Gagal terhubung ke {{target}} melalui proksi “{{proxy}}”. Mungkin ada masalah proksi atau jaringan. Periksa proksi atau coba simpul lain.",
+      "proxyTimeout": "Koneksi ke {{target}} melalui proksi “{{proxy}}” kehabisan waktu. Mungkin ada masalah proksi atau jaringan. Periksa proksi atau coba simpul lain.",
+      "proxyAuth": "Autentikasi proksi “{{proxy}}” gagal. Periksa nama pengguna atau kata sandi proksi.",
+      "localProxyUnavailable": "Tidak dapat terhubung ke proksi lokal “{{proxy}}”. Pastikan layanan proksi sedang berjalan.",
+      "directConnection": "Gagal terhubung ke {{target}}. Periksa jaringan dan coba lagi.",
+      "directTimeout": "Koneksi ke {{target}} kehabisan waktu. Periksa jaringan dan coba lagi."
+    },
     "codexUsage": {
       "title": "Kuota dan penggunaan",
       "session": "Chat saat ini",
@@ -1676,6 +1685,35 @@
       "refreshed": "Usage disegarkan",
       "usage": "Pemakaian",
       "tierOther": "Lainnya"
+    },
+    "background": {
+      "title": "Latar",
+      "description": "Hanya mengubah latar aplikasi. Kartu akun dan kontrol tetap seperti semula.",
+      "presets": "Pilihan latar",
+      "default": "Bawaan",
+      "mist": "Kabut",
+      "forest": "Hutan",
+      "dusk": "Senja",
+      "sand": "Pasir",
+      "custom": "Kustom",
+      "chooseImage": "Pilih gambar",
+      "replaceImage": "Ganti gambar",
+      "imageHint": "JPG, PNG, atau WebP, hingga 10 MB. Gambar besar diperkecil di perangkat.",
+      "preview": "Pratinjau",
+      "strength": "Intensitas",
+      "blur": "Buram",
+      "pixels": "{{count}} piksel",
+      "position": "Posisi gambar",
+      "center": "Tengah",
+      "top": "Atas",
+      "bottom": "Bawah",
+      "localHint": "Perubahan langsung diterapkan dan disimpan otomatis di perangkat ini. Gambar tidak diunggah. Pulihkan menghapus gambar tersimpan.",
+      "restore": "Pulihkan",
+      "imageType": "Pilih gambar JPG, PNG, atau WebP.",
+      "imageSize": "Pilih gambar di bawah 10 MB.",
+      "imageRead": "Gambar tidak dapat dibaca. Coba berkas lain.",
+      "storage": "Latar tidak dapat dimuat atau disimpan. Coba lagi; latar sebelumnya tetap tersimpan.",
+      "saveFailed": "Latar ditampilkan tetapi belum tersimpan. Coba lagi; latar yang sebelumnya tersimpan tetap dipertahankan."
     }
   },
   "appPath": {
@@ -2400,6 +2438,14 @@
       "weekly": "Kuota mingguan",
       "windowHint": "Ambang mengikuti durasi sebenarnya: seminggu atau lebih memakai ambang mingguan. Akun dengan kuota mingguan saja hanya memeriksa kuota itu. Tanpa durasi, pemetaan jendela utama dan sekunder tetap dipakai.",
       "rule": "Sisa jangka pendek <= {{shortCycle}}% atau mingguan <= {{weekly}}%"
+    },
+    "launchConfirmation": {
+      "title": "Peluncuran belum pasti",
+      "description": "Peluncuran telah diminta, tetapi status aplikasi belum terkonfirmasi. Aplikasi mungkin sudah terbuka. Jangan meluncurkannya lagi.",
+      "check": "Periksa status",
+      "notRunning": "Instans tujuan belum terdeteksi. Periksa lagi nanti, atau tutup dialog ini sebelum mencoba meluncurkan kembali.",
+      "checkFailed": "Status aplikasi tidak dapat dibaca. Silakan periksa lagi nanti.",
+      "maintenanceDeferred": "Pemeriksaan sesi sementara tidak tersedia. Riwayat tetap tersimpan dan langkah pemeliharaan ini dilewati."
     },
     "launchErrors": {
       "sessionRestoreFailed": "Perbaikan sesi gagal dan pemulihan cadangan belum selesai. Peluncuran dihentikan; periksa log dan cadangan sebelum mencoba lagi.",
@@ -3360,7 +3406,7 @@
       "resetCreditStatusRedeemed": "Dipakai",
       "resetCreditStatusExpired": "Kedaluwarsa",
       "resetCreditStatusUnknown": "Tidak diketahui",
-      "resetCreditNextExpiry": "Kedaluwarsa terdekat: {{time}}",
+      "resetCreditNextExpiry": "Kedaluwarsa reset terdekat {{time}}",
       "resetCreditDetailsTitle": "Detail reset",
       "resetCreditNoRecords": "Belum ada catatan reset",
       "resetCreditRecordsLoadFailed": "Gagal memuat catatan reset: {{error}}",
@@ -3376,7 +3422,12 @@
       "codeReview": "Tinjauan kode",
       "codeReviewShort": "Tinjauan",
       "monthlyCreditsHint": "Sisa kredit bulanan",
-      "monthlyCreditsInline": "Kredit: {{value}}"
+      "monthlyCreditsInline": "Kredit: {{value}}",
+      "resetCreditExpiryHours": "{{hours}} j {{minutes}} m",
+      "resetCreditExpiryMinutes": "{{minutes}} m",
+      "resetCreditExpiryExpired": "Kedaluwarsa · detail",
+      "resetCreditExpiryUrgent": "Segera berakhir: {{time}} · {{duration}}",
+      "resetCreditExpiryNormal": "Berakhir {{time}} · {{duration}}"
     },
     "usage": {
       "open": "Buka penggunaan OpenAI",
@@ -3650,6 +3701,7 @@
         "expand": "Perluas",
         "collapse": "Ciutkan",
         "repairVisibility": "Perbaiki visibilitas",
+        "repairIndex": "Perbaiki indeks chat",
         "restoreSessions": "Pulihkan sesi",
         "exportSessions": "Ekspor sesi",
         "importSessions": "Impor sesi",
@@ -3682,6 +3734,10 @@
         "clear": "Bersihkan"
       },
       "messages": {
+        "deleteNotConfirmed": "Klien tidak mengonfirmasi penghapusan. Pembersihan lokal dihentikan dan cadangan dipertahankan: {{error}}",
+        "historyReadFailed": "Riwayat percakapan tidak dapat dibaca dengan aman: {{error}}",
+        "restoreIndexRetry": "File percakapan dipertahankan, tetapi daftar percakapan gagal diperbarui. File asli masih ada di Sampah. Atasi masalahnya lalu coba lagi: {{error}}",
+        "importIndexRetry": "File percakapan telah diimpor, tetapi daftar percakapan gagal diperbarui. File dan paket impor dipertahankan. Atasi masalahnya lalu coba lagi: {{error}}",
         "pickOne": "Silakan pilih setidaknya satu sesi",
         "syncNeedTwo": "Setidaknya dua instansi diperlukan untuk menyinkronkan sesi",
         "pickRestoreOne": "Pilih setidaknya satu sesi untuk dipulihkan",
@@ -3792,7 +3848,18 @@
         "title": "Perbaiki riwayat",
         "description": "Menormalkan penyedia dalam indeks SQLite, katalog sesi, dan ruang kerja. Semua byte asli file rollout dipertahankan; hanya waktu file yang diperbaiki. Cadangan lokal dibuat terlebih dahulu.",
         "stopInstanceHint": "Tutup sepenuhnya instans Codex App/ChatGPT yang dipilih sebelum perbaikan lengkap. Anda tetap dapat meninjau perubahan lebih dulu.",
-        "encryptedContentWarning": "Terdeteksi riwayat yang dienkripsi oleh penyedia atau akun lain. Metadata dapat dimigrasikan, tetapi melanjutkan atau memadatkan sesi tersebut mungkin gagal; kembali ke penyedia/akun asal atau mulai sesi baru."
+        "encryptedContentWarning": "Terdeteksi riwayat yang dienkripsi oleh penyedia atau akun lain. Metadata dapat dimigrasikan, tetapi melanjutkan atau memadatkan sesi tersebut mungkin gagal; kembali ke penyedia/akun asal atau mulai sesi baru.",
+        "modeHistory": "Perbaikan edit/cabang",
+        "modeHistoryDesc": "Perbaiki kegagalan mengedit pesan dan membuat cabang chat akibat indeks tidak valid.",
+        "historyLiveHint": "Perbaikan dapat dilakukan saat klien berjalan. Setelah selesai, mulai ulang klien dan buka kembali percakapan.",
+        "historyDescription": "Memeriksa percakapan terpilih dan riwayat asalnya, lalu mereset hanya indeks halaman yang tidak valid. Pesan, akun, dan pengaturan Provider tetap sama. Perbaikan dapat berjalan saat klien terbuka; mulai ulang setelahnya untuk memuat ulang indeks.",
+        "historyPreview": "Ditemukan {{count}} indeks riwayat tidak valid yang dapat dibangun ulang. Riwayat percakapan tetap utuh.",
+        "historySuccess": "{{count}} indeks riwayat yang tidak valid telah direset. Mulai ulang klien dan buka kembali percakapan untuk membangunnya ulang. Cadangan disimpan.",
+        "historyNoChanges": "Tidak ditemukan indeks riwayat tidak valid yang dapat dibangun ulang dengan aman.",
+        "historyFailed": "Perbaikan indeks riwayat belum selesai: {{error}}",
+        "historyChanged": "Data percakapan berubah selama perbaikan. Perbaikan ini tidak diterapkan. Coba lagi sebentar lagi.",
+        "historyScan": "Memeriksa indeks riwayat ({{current}}/{{total}})…",
+        "historyReset": "Mencadangkan dan mengatur ulang indeks yang tidak valid…"
       },
       "importModal": {
         "title": "Impor sesi",
@@ -4647,6 +4714,11 @@
       },
       "routing": {
         "optionsTitle": "Opsi Routing",
+        "sessionIdentityMapping": "Pemetaan ID sesi",
+        "sessionIdentityMappingEnableHint": "Saat pemetaan diaktifkan, setiap akun layanan hulu memakai Session-Id dan Thread-Id tersendiri ketika berganti akun. Ini memperkuat isolasi pengenal, tetapi dapat mengurangi penggunaan ulang cache antar akun. Pemetaan yang ada tetap digunakan kembali dalam akun yang sama.",
+        "sessionIdentityMappingDisableHint": "Saat dinonaktifkan, nilai Session-Id dan Thread-Id asli klien dipertahankan. Akun layanan hulu yang berbeda dapat berbagi pengenal tersebut, sehingga isolasi melemah tetapi penggunaan ulang cache antar akun dapat meningkat.",
+        "sessionIdentityMappingCacheNote": "Tingkat keberhasilan cache juga bergantung pada aturan layanan hulu, cakupan akun, dan isi permintaan. Mengubah pengaturan ini tidak menjamin tingkat tersebut naik atau turun.",
+        "sessionIdentityMappingSaveNote": "Setelah mengonfirmasi, simpan pengaturan untuk menerapkan perubahan.",
         "sessionAffinity": "Afinitas Sesi",
         "sessionAffinityTtl": "Kedaluwarsa (detik)",
         "responsesWebsockets": "Responses melalui WebSocket",
@@ -5909,6 +5981,22 @@
       "label": "Sinkronkan kuota aktif",
       "description": "Tanpa menjalankan layanan API. Akun lokal aktif diperbarui tiap 5–30 detik; perubahan berkas sesi memicu pemeriksaan tambahan. Hanya metadata berkas terbaru yang diperiksa, tanpa membaca percakapan. Pengecualian akun, filter paket, dan aturan grup tetap berlaku. Nonaktif secara bawaan.",
       "error": "Gagal memuat atau menyimpan pengaturan. Coba lagi."
+    },
+    "pathRecovery": {
+      "title": "Atur lokasi aplikasi Codex",
+      "description": "Lokasi klien Codex yang dapat digunakan tidak ditemukan. Pilih aplikasi, atau buka Codex secara manual lalu deteksi.",
+      "reload": "Muat ulang",
+      "timeout": "Waktu operasi habis. Coba lagi; aplikasi tidak akan diluncurkan otomatis.",
+      "noCandidates": "Codex tidak terdeteksi. Buka klien secara manual lalu deteksi lagi, atau pilih lokasinya.",
+      "pathRequired": "Pilih atau masukkan lokasi klien Codex.",
+      "invalidPath": "Lokasi ini bukan aplikasi desktop Codex yang valid. Pilih aplikasi lagi.",
+      "candidates": "Aplikasi terdeteksi",
+      "autoLaunchHint": "Matikan opsi ini untuk berganti akun tanpa membuka aplikasi desktop. Anda tetap dapat membukanya secara manual.",
+      "manualLaunchHint": "Mematikan peluncuran otomatis tidak menyelesaikan peluncuran manual ini. Menyimpan pengaturan saja membatalkan percobaan ini.",
+      "saveAndRetry": "Simpan dan coba lagi",
+      "saveWithoutLaunch": "Simpan dan lanjutkan",
+      "saveOnly": "Simpan saja",
+      "validationBusy": "Pemeriksaan lokasi sebelumnya masih berjalan. Coba lagi sebentar lagi."
     }
   },
   "codebuddy": {

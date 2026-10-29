@@ -22,6 +22,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
    DEFAULT_CODEX_INSTANCE_ID,
    type CodexLaunchPreviewLaunchOptions,
  } from "../components/codex/CodexLaunchPreviewModal";
+import { isCodexLaunchCancelled } from '../utils/codexLaunchCancellation';
 import {
   CODEX_LAUNCH_PREVIEW_API_SERVICE_CARD_KEY,
   persistCodexLaunchPreviewLastInstanceId,
@@ -1165,7 +1166,7 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
                 preparing: false,
                 executing: false,
                 executeMessage: null,
-                executeError: String(error).replace(/^Error:\s*/, ""),
+                executeError: isCodexLaunchCancelled(error) ? null : String(error).replace(/^Error:\s*/, ""),
               }
             : prev,
         );
@@ -1221,9 +1222,13 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
       );
     }, [pendingCliLaunchTarget, openCodexCliLaunchModal]);
 
-    const handleLaunchCodexCli = async (account: CodexAccount) => {
+    const handleLaunchCodexCli = async (
+      account: CodexAccount,
+      launchOptions?: CodexLaunchPreviewLaunchOptions,
+    ) => {
       const blockedReason = getCodexSwitchOrLaunchBlockedReason(account);
       if (blockedReason) {
+        if (launchOptions) throw new Error(blockedReason);
         setMessage({
           text: blockedReason,
           tone: "error",
@@ -1240,15 +1245,38 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
         });
        return;
      }
-     // CLI 快速启动也先走启动预览，确认后再进入 CLI 启动；DeepSeek 账号在确认时选择接入方式与模型。
+      if (launchOptions) {
+        const launchAccount = isDeepSeekAccount(account) && launchOptions.deepSeekAccessMode
+          ? await updateAccountInstanceAccess(
+              account.id,
+              launchOptions.deepSeekAccessMode,
+              null,
+              launchOptions.imageGenerationAccountIds ?? [],
+              launchOptions.imageGenerationAccountModels ?? {},
+            )
+          : account;
+        const presentation = buildCodexAccountPresentation(launchAccount, t);
+        setLaunchPreviewCliIntent(false);
+        openCodexCliLaunchModal(
+          "account",
+          launchAccount.id,
+          presentation.displayName || launchAccount.email || launchAccount.id,
+          isDeepSeekAccount(launchAccount)
+            ? resolveDeepSeekBindAccountId(launchAccount)
+            : launchAccount.id,
+        );
+        return;
+      }
+     // 账号列表入口先走启动预览；预览内入口携带已确认的配置直接进入 CLI 弹框。
       restoreLaunchPreviewInstanceId(account.id);
       setLaunchPreviewCliIntent(true);
       setLaunchPreviewAccount(account);
     };
 
-    const handleLaunchLocalAccessCli = () => {
+    const handleLaunchLocalAccessCli = (launchOptions?: CodexLaunchPreviewLaunchOptions) => {
       if (cliLaunchModal || cliLaunchingAccountId) return;
       if (!localAccessCollection) {
+        if (launchOptions) throw new Error(t("codex.localAccess.testUnavailable", "当前 API 服务地址不可用"));
         setMessage({
           text: t("codex.localAccess.testUnavailable", "当前 API 服务地址不可用"),
           tone: "error",
@@ -1402,7 +1430,7 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
                 preparing: false,
                 executing: false,
                 executeMessage: null,
-                executeError: String(error).replace(/^Error:\s*/, ""),
+                executeError: isCodexLaunchCancelled(error) ? null : String(error).replace(/^Error:\s*/, ""),
               }
             : prev,
         );
@@ -1457,7 +1485,7 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
             ? {
                 ...prev,
                 executing: false,
-                executeError: String(error).replace(/^Error:\s*/, ""),
+                executeError: isCodexLaunchCancelled(error) ? null : String(error).replace(/^Error:\s*/, ""),
               }
             : prev,
         );
@@ -1501,7 +1529,7 @@ export function useCodexAccountsAccessController(context: CodexAccountsAccessCon
             prev && prev.instanceDraft?.userDataDir === draft.userDataDir
               ? {
                   ...prev,
-                  executeError: String(error).replace(/^Error:\s*/, ""),
+                  executeError: isCodexLaunchCancelled(error) ? null : String(error).replace(/^Error:\s*/, ""),
                 }
               : prev,
           );
