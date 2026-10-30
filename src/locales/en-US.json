@@ -484,6 +484,7 @@
         "toggleDirection": "Toggle sort direction",
         "credits": "By remaining credits",
         "planEnd": "By cycle end time",
+        "quotaFailed": "By quota refresh failure",
         "recommended": "Recommended",
         "recommendedAscTooltip": "Recommended (least worthwhile first)",
         "recommendedDescTooltip": "Recommended (most worthwhile first)"

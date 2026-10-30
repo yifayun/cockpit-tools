@@ -512,6 +512,19 @@ export function CursorAccountsPage() {
       const diff = bReset - aReset;
       return sortDirection === 'desc' ? diff : -diff;
     }
+    if (sortBy === 'quota_failed') {
+      const aFailed = hasCursorQuotaQueryError(a) || (a.status || '').toLowerCase() === 'error';
+      const bFailed = hasCursorQuotaQueryError(b) || (b.status || '').toLowerCase() === 'error';
+      if (aFailed !== bFailed) {
+        // Desc: failed accounts first; Asc: healthy accounts first.
+        const failedFirst = Number(bFailed) - Number(aFailed);
+        return sortDirection === 'desc' ? failedFirst : -failedFirst;
+      }
+      const aAt = a.quota_query_last_error_at ?? 0;
+      const bAt = b.quota_query_last_error_at ?? 0;
+      const diff = bAt - aAt;
+      return sortDirection === 'desc' ? diff : -diff;
+    }
     const aUsage = getCursorUsage(a);
     const bUsage = getCursorUsage(b);
     const aValue = 100 - (aUsage.inlineSuggestionsUsedPercent ?? 0);
@@ -1120,6 +1133,7 @@ export function CursorAccountsPage() {
               { value: 'created_at', label: t('common.shared.sort.createdAt', '按创建时间') },
               { value: 'credits', label: t('common.shared.sort.credits', '按剩余 Credits') },
               { value: 'plan_end', label: t('common.shared.sort.planEnd', '按配额周期结束时间') },
+              { value: 'quota_failed', label: t('common.shared.sort.quotaFailed', '按配额刷新失败') },
             ]}
             ariaLabel={t('common.shared.sortLabel', '排序')}
             icon={<ArrowDownWideNarrow size={14} />}

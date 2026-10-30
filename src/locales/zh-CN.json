@@ -486,7 +486,8 @@
         "recommendedDescTooltip": "按推荐度降序（最值得切去的在前）",
         "toggleDirection": "切换排序方向",
         "credits": "按剩余 Credits",
-        "planEnd": "按配额周期结束时间"
+        "planEnd": "按配额周期结束时间",
+        "quotaFailed": "按配额刷新失败"
       },
       "sortLabel": "排序",
       "token": {
