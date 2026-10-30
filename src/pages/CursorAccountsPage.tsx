@@ -450,12 +450,12 @@ export function CursorAccountsPage() {
       const next = prev.filter(
         (value) =>
           value === VALID_ACCOUNTS_FILTER_VALUE ||
-          (value === CURSOR_QUOTA_FAILED_FILTER_VALUE && tierSummary.quotaFailedCount > 0) ||
+          value === CURSOR_QUOTA_FAILED_FILTER_VALUE ||
           tierSummary.dynamicCounts.has(value),
       );
       return next.length === prev.length ? prev : next;
     });
-  }, [tierSummary.dynamicCounts, tierSummary.quotaFailedCount]);
+  }, [tierSummary.dynamicCounts]);
 
   const resolveFilterLabel = useCallback(
     (planKey: string, count: number) => {
@@ -480,15 +480,13 @@ export function CursorAccountsPage() {
         label: resolveFilterLabel(planKey, tierSummary.dynamicCounts.get(planKey) ?? 0),
       });
     });
-    if (tierSummary.quotaFailedCount > 0) {
-      options.push({
-        value: CURSOR_QUOTA_FAILED_FILTER_VALUE,
-        label: t('cursor.filters.quotaFailed', {
-          count: tierSummary.quotaFailedCount,
-          defaultValue: '配额查询失败 ({{count}})',
-        }),
-      });
-    }
+    options.push({
+      value: CURSOR_QUOTA_FAILED_FILTER_VALUE,
+      label: t('cursor.filters.quotaFailed', {
+        count: tierSummary.quotaFailedCount,
+        defaultValue: '配额查询失败 ({{count}})',
+      }),
+    });
     options.push(buildValidAccountsFilterOption(t, tierSummary.validCount));
     return options;
   }, [resolveFilterLabel, t, tierSummary.dynamicCounts, tierSummary.extraKeys, tierSummary.knownCounts.ENTERPRISE, tierSummary.knownCounts.FREE, tierSummary.knownCounts.FREE_TRIAL, tierSummary.knownCounts.PRO, tierSummary.knownCounts.PRO_PLUS, tierSummary.knownCounts.ULTRA, tierSummary.quotaFailedCount, tierSummary.validCount]);
